@@ -44,6 +44,18 @@ class ViewController: UIViewController {
         super.viewDidLoad()
 
 
+        let highScore = UserDefaults.standard.object(forKey: "highscore")
+        
+        if highScore == nil{
+            
+            highscoreLabel.text = "HighScore : 0"
+        }
+        
+        if let newScore = highScore as? Int{
+            
+            highscoreLabel.text = "HighScore : \(newScore)"
+        }
+        
         scoreLabel.text = "Score : \(score)"
 
         
@@ -134,11 +146,35 @@ class ViewController: UIViewController {
             hideTimer.invalidate()
             
             
+            let highScoreText = highscoreLabel.text?.replacingOccurrences(of: "HighScore : ", with: "") ?? ""
+            
+            
+            if self.score > Int(highScoreText) ?? 0 {
+                
+                UserDefaults.standard.set(self.score, forKey: "highscore")
+                highscoreLabel.text = "HighScore : \(self.score)"
+            }
+            
+            
             let alert = UIAlertController(title: "Time", message: "Time's Up !!!", preferredStyle: .alert)
             
-            let okButton = UIAlertAction(title: "Yep", style: .default, handler: nil)
+            
             
             let noButton = UIAlertAction(title: "Nope", style: .cancel, handler: nil)
+            
+            
+            let okButton = UIAlertAction(title: "Yep", style: .default, handler:{(UIAlertAction)
+                in
+                
+                self.score = 0
+                self.scoreLabel.text = "Score : \(self.score)"
+                self.counter = 20
+                self.timeLabel.text = "Time : \(self.counter)"
+                
+                self.timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(ViewController.countDown), userInfo: nil, repeats: true)
+                
+                self.hideTimer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(ViewController.hideFruits), userInfo: nil, repeats: true)
+            })
             
             alert.addAction(okButton)
             alert.addAction(noButton)
