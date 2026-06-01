@@ -8,6 +8,59 @@
 
 import UIKit
 
+private struct GameState {
+    private let gameDuration: Int
+
+    private(set) var score: Int
+    private(set) var remainingTime: Int
+
+    init(gameDuration: Int) {
+        self.gameDuration = gameDuration
+        self.score = 0
+        self.remainingTime = gameDuration
+    }
+
+    mutating func reset() {
+        score = 0
+        remainingTime = gameDuration
+    }
+
+    mutating func incrementScore() {
+        score += 1
+    }
+
+    mutating func tick() -> Bool {
+        guard remainingTime > 0 else { return true }
+        remainingTime -= 1
+        return remainingTime == 0
+    }
+}
+
+private protocol HighScoreStoring {
+    func fetchHighScore() -> Int
+    @discardableResult
+    func saveIfHigher(score: Int) -> Int
+}
+
+private struct UserDefaultsHighScoreStore: HighScoreStoring {
+    private let highScoreKey = "highscore"
+
+    func fetchHighScore() -> Int {
+        UserDefaults.standard.integer(forKey: highScoreKey)
+    }
+
+    func saveIfHigher(score: Int) -> Int {
+        let currentHighScore = fetchHighScore()
+
+        guard score > currentHighScore else {
+            return currentHighScore
+        }
+
+        UserDefaults.standard.set(score, forKey: highScoreKey)
+        return score
+    }
+}
+
 @MainActor
 final class ViewController: UIViewController {
 
@@ -25,12 +78,11 @@ final class ViewController: UIViewController {
     @IBOutlet private weak var fruit8: UIImageView!
     @IBOutlet private weak var fruit9: UIImageView!
 
-    private let highScoreKey = "highscore"
     private static let gameDuration = 20
     private let fruitHideInterval: TimeInterval = 0.5
+    private let highScoreStore: HighScoreStoring = UserDefaultsHighScoreStore()
 
-    private var score = 0
-    private var counter = Self.gameDuration
+    private var gameState = GameState(gameDuration: ViewController.gameDuration)
     private var timer: Timer?
     private var hideTimer: Timer?
     private var fruitsArray: [UIImageView] = []
@@ -40,7 +92,7 @@ final class ViewController: UIViewController {
 
         fruitsArray = [fruit1, fruit2, fruit3, fruit4, fruit5, fruit6, fruit7, fruit8, fruit9]
         configureGestures()
-        updateHighScoreLabel()
+        renderHighScore()
         startGame()
     }
 
@@ -50,19 +102,17 @@ final class ViewController: UIViewController {
     }
 
     private func configureGestures() {
-        for fruit in fruitsArray {
-            fruit.isUserInteractionEnabled = true
-            fruit.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(increaseScore)))
+        fruitsArray.forEach {
+            $0.isUserInteractionEnabled = true
+            $0.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(increaseScore)))
         }
     }
 
     private func startGame() {
         stopTimers()
 
-        score = 0
-        counter = Self.gameDuration
-        scoreLabel.text = "Score : \(score)"
-        timeLabel.text = "Time : \(counter)"
+        gameState.reset()
+        renderGameState()
 
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.countDown()
@@ -82,16 +132,14 @@ final class ViewController: UIViewController {
         hideTimer = nil
     }
 
-    private func updateHighScoreLabel() {
-        let highScore = UserDefaults.standard.integer(forKey: highScoreKey)
-        highscoreLabel.text = "HighScore : \(highScore)"
+    private func renderGameState() {
+        scoreLabel.text = "Score : \(gameState.score)"
+        timeLabel.text = "Time : \(gameState.remainingTime)"
     }
 
-    private func saveHighScoreIfNeeded() {
-        let highScore = UserDefaults.standard.integer(forKey: highScoreKey)
-        guard score > highScore else { return }
-        UserDefaults.standard.set(score, forKey: highScoreKey)
-        highscoreLabel.text = "HighScore : \(score)"
+    private func renderHighScore(_ highScore: Int? = nil) {
+        let value = highScore ?? highScoreStore.fetchHighScore()
+        highscoreLabel.text = "HighScore : \(value)"
     }
 
     private func hideFruits() {
@@ -100,13 +148,15 @@ final class ViewController: UIViewController {
     }
 
     private func countDown() {
-        counter -= 1
-        timeLabel.text = "Time : \(counter)"
+        let isGameFinished = gameState.tick()
+        timeLabel.text = "Time : \(gameState.remainingTime)"
 
-        guard counter == 0 else { return }
+        guard isGameFinished else { return }
 
         stopTimers()
-        saveHighScoreIfNeeded()
+
+        let highScore = highScoreStore.saveIfHigher(score: gameState.score)
+        renderHighScore(highScore)
         showTimeUpAlert()
     }
 
@@ -126,7 +176,7 @@ final class ViewController: UIViewController {
     }
 
     @objc private func increaseScore() {
-        score += 1
-        scoreLabel.text = "Score : \(score)"
+        gameState.incrementScore()
+        scoreLabel.text = "Score : \(gameState.score)"
     }
 }
