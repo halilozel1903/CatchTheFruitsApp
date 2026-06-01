@@ -89,12 +89,9 @@ final class ViewController: UIViewController {
 
     private func saveHighScoreIfNeeded() {
         let highScore = UserDefaults.standard.integer(forKey: highScoreKey)
-        let latestHighScore = if score > highScore { score } else { highScore }
-
-        guard latestHighScore != highScore else { return }
-
-        UserDefaults.standard.set(latestHighScore, forKey: highScoreKey)
-        highscoreLabel.text = "HighScore : \(latestHighScore)"
+        guard score > highScore else { return }
+        UserDefaults.standard.set(score, forKey: highScoreKey)
+        highscoreLabel.text = "HighScore : \(score)"
     }
 
     private func hideFruits() {

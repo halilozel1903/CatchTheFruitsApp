@@ -44,5 +44,4 @@ CatchTheFruits, UIKit ile geliştirilmiş basit ve eğlenceli bir iOS refleks oy
 ## Swift 6.3.2 ile Kullanılan Swift Özellikleri
 
 - **`@MainActor` kullanımı:** UI güncellemeleri ana aktör üzerinde güvenli şekilde çalışacak biçimde işaretlendi.
-- **`if` expression:** High score güncelleme mantığında daha okunabilir ve modern Swift tarzı ifade kullanımı tercih edildi.
 - **Fonksiyonel koleksiyon işlemleri (`forEach`)**: Meyve gizleme akışı daha sade hale getirildi.
