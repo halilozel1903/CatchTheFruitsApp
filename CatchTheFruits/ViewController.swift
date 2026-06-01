@@ -25,11 +25,11 @@ final class ViewController: UIViewController {
     @IBOutlet private weak var fruit9: UIImageView!
 
     private let highScoreKey = "highscore"
-    private let gameDuration = 20
+    private static let gameDuration = 20
     private let fruitHideInterval: TimeInterval = 0.5
 
     private var score = 0
-    private var counter = 20
+    private var counter = Self.gameDuration
     private var timer: Timer?
     private var hideTimer: Timer?
     private var fruitsArray: [UIImageView] = []
@@ -59,7 +59,7 @@ final class ViewController: UIViewController {
         stopTimers()
 
         score = 0
-        counter = gameDuration
+        counter = Self.gameDuration
         scoreLabel.text = "Score : \(score)"
         timeLabel.text = "Time : \(counter)"
 
