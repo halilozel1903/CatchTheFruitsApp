@@ -8,6 +8,7 @@
 
 import UIKit
 
+@MainActor
 final class ViewController: UIViewController {
 
     @IBOutlet private weak var scoreLabel: UILabel!
@@ -88,18 +89,13 @@ final class ViewController: UIViewController {
 
     private func saveHighScoreIfNeeded() {
         let highScore = UserDefaults.standard.integer(forKey: highScoreKey)
-
         guard score > highScore else { return }
-
         UserDefaults.standard.set(score, forKey: highScoreKey)
         highscoreLabel.text = "HighScore : \(score)"
     }
 
     private func hideFruits() {
-        for fruit in fruitsArray {
-            fruit.isHidden = true
-        }
-
+        fruitsArray.forEach { $0.isHidden = true }
         fruitsArray.randomElement()?.isHidden = false
     }
 
