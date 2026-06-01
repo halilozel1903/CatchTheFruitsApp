@@ -8,186 +8,129 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+final class ViewController: UIViewController {
 
-    
-    @IBOutlet weak var scoreLabel: UILabel!
-    @IBOutlet weak var timeLabel: UILabel!
-    @IBOutlet weak var highscoreLabel: UILabel!
-    
-    
-    @IBOutlet weak var fruit1: UIImageView!
-    @IBOutlet weak var fruit2: UIImageView!
-    @IBOutlet weak var fruit3: UIImageView!
-    @IBOutlet weak var fruit4: UIImageView!
-    @IBOutlet weak var fruit5: UIImageView!
-    @IBOutlet weak var fruit6: UIImageView!
-    @IBOutlet weak var fruit7: UIImageView!
-    @IBOutlet weak var fruit8: UIImageView!
-    @IBOutlet weak var fruit9: UIImageView!
-    
-  
-    var score = 0
-    
-    var timer = Timer()
-    
-    var hideTimer = Timer()
-    
-    var counter = 0
-    
-    
-    var fruitsArray = [UIImageView]()
+    @IBOutlet private weak var scoreLabel: UILabel!
+    @IBOutlet private weak var timeLabel: UILabel!
+    @IBOutlet private weak var highscoreLabel: UILabel!
 
-    
-    
+    @IBOutlet private weak var fruit1: UIImageView!
+    @IBOutlet private weak var fruit2: UIImageView!
+    @IBOutlet private weak var fruit3: UIImageView!
+    @IBOutlet private weak var fruit4: UIImageView!
+    @IBOutlet private weak var fruit5: UIImageView!
+    @IBOutlet private weak var fruit6: UIImageView!
+    @IBOutlet private weak var fruit7: UIImageView!
+    @IBOutlet private weak var fruit8: UIImageView!
+    @IBOutlet private weak var fruit9: UIImageView!
+
+    private let highScoreKey = "highscore"
+    private let gameDuration = 20
+    private let fruitHideInterval: TimeInterval = 0.5
+
+    private var score = 0
+    private var counter = 20
+    private var timer: Timer?
+    private var hideTimer: Timer?
+    private var fruitsArray: [UIImageView] = []
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        fruitsArray = [fruit1, fruit2, fruit3, fruit4, fruit5, fruit6, fruit7, fruit8, fruit9]
+        configureGestures()
+        updateHighScoreLabel()
+        startGame()
+    }
 
-        let highScore = UserDefaults.standard.object(forKey: "highscore")
-        
-        if highScore == nil{
-            
-            highscoreLabel.text = "HighScore : 0"
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopTimers()
+    }
+
+    private func configureGestures() {
+        for fruit in fruitsArray {
+            fruit.isUserInteractionEnabled = true
+            fruit.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(increaseScore)))
         }
-        
-        if let newScore = highScore as? Int{
-            
-            highscoreLabel.text = "HighScore : \(newScore)"
-        }
-        
+    }
+
+    private func startGame() {
+        stopTimers()
+
+        score = 0
+        counter = gameDuration
         scoreLabel.text = "Score : \(score)"
-
-        
-        let recognizer1 = UITapGestureRecognizer(target: self, action: #selector(ViewController.increaseScore))
-        let recognizer2 = UITapGestureRecognizer(target: self, action: #selector(ViewController.increaseScore))
-        let recognizer3 = UITapGestureRecognizer(target: self, action: #selector(ViewController.increaseScore))
-        let recognizer4 = UITapGestureRecognizer(target: self, action: #selector(ViewController.increaseScore))
-        let recognizer5 = UITapGestureRecognizer(target: self, action: #selector(ViewController.increaseScore))
-        let recognizer6 = UITapGestureRecognizer(target: self, action: #selector(ViewController.increaseScore))
-        let recognizer7 = UITapGestureRecognizer(target: self, action: #selector(ViewController.increaseScore))
-        let recognizer8 = UITapGestureRecognizer(target: self, action: #selector(ViewController.increaseScore))
-        let recognizer9 = UITapGestureRecognizer(target: self, action: #selector(ViewController.increaseScore))
-        
-        
-        fruit1.isUserInteractionEnabled = true
-        fruit2.isUserInteractionEnabled = true
-        fruit3.isUserInteractionEnabled = true
-        fruit4.isUserInteractionEnabled = true
-        fruit5.isUserInteractionEnabled = true
-        fruit6.isUserInteractionEnabled = true
-        fruit7.isUserInteractionEnabled = true
-        fruit8.isUserInteractionEnabled = true
-        fruit9.isUserInteractionEnabled = true
-        
-        
-        fruit1.addGestureRecognizer(recognizer1)
-        fruit2.addGestureRecognizer(recognizer2)
-        fruit3.addGestureRecognizer(recognizer3)
-        fruit4.addGestureRecognizer(recognizer4)
-        fruit5.addGestureRecognizer(recognizer5)
-        fruit6.addGestureRecognizer(recognizer6)
-        fruit7.addGestureRecognizer(recognizer7)
-        fruit8.addGestureRecognizer(recognizer8)
-        fruit9.addGestureRecognizer(recognizer9)
-
-
-
-        // timer
-        
-        counter = 20
         timeLabel.text = "Time : \(counter)"
-        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(ViewController.countDown), userInfo: nil, repeats: true)
-        
-        
-        // hide timer
-        
-        hideTimer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector:#selector(ViewController.hideFruits), userInfo: nil, repeats: true)
 
-        
-        // array
-        
-        fruitsArray.append(fruit1)
-        fruitsArray.append(fruit2)
-        fruitsArray.append(fruit3)
-        fruitsArray.append(fruit4)
-        fruitsArray.append(fruit5)
-        fruitsArray.append(fruit6)
-        fruitsArray.append(fruit7)
-        fruitsArray.append(fruit8)
-        fruitsArray.append(fruit9)
-        
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.countDown()
+        }
+
+        hideTimer = Timer.scheduledTimer(withTimeInterval: fruitHideInterval, repeats: true) { [weak self] _ in
+            self?.hideFruits()
+        }
+
         hideFruits()
     }
-    
-    
-    @objc func hideFruits(){
-        
-        for fruit in fruitsArray{
-            
+
+    private func stopTimers() {
+        timer?.invalidate()
+        hideTimer?.invalidate()
+        timer = nil
+        hideTimer = nil
+    }
+
+    private func updateHighScoreLabel() {
+        let highScore = UserDefaults.standard.integer(forKey: highScoreKey)
+        highscoreLabel.text = "HighScore : \(highScore)"
+    }
+
+    private func saveHighScoreIfNeeded() {
+        let highScore = UserDefaults.standard.integer(forKey: highScoreKey)
+
+        guard score > highScore else { return }
+
+        UserDefaults.standard.set(score, forKey: highScoreKey)
+        highscoreLabel.text = "HighScore : \(score)"
+    }
+
+    private func hideFruits() {
+        for fruit in fruitsArray {
             fruit.isHidden = true
         }
-        
-        let random = Int(arc4random_uniform(UInt32(fruitsArray.count - 1)))
-        
-        fruitsArray[random].isHidden = false
-        
+
+        fruitsArray.randomElement()?.isHidden = false
     }
-    
-    
-    @objc func countDown(){
-        
+
+    private func countDown() {
         counter -= 1
         timeLabel.text = "Time : \(counter)"
-        
-        if counter == 0{
-            
-            timer.invalidate()
-            hideTimer.invalidate()
-            
-            
-            let highScoreText = highscoreLabel.text?.replacingOccurrences(of: "HighScore : ", with: "") ?? ""
-            
-            
-            if self.score > Int(highScoreText) ?? 0 {
-                
-                UserDefaults.standard.set(self.score, forKey: "highscore")
-                highscoreLabel.text = "HighScore : \(self.score)"
-            }
-            
-            
-            let alert = UIAlertController(title: "Time", message: "Time's Up !!!", preferredStyle: .alert)
-            
-            
-            
-            let noButton = UIAlertAction(title: "Nope", style: .cancel, handler: nil)
-            
-            
-            let okButton = UIAlertAction(title: "Yep", style: .default, handler:{(UIAlertAction)
-                in
-                
-                self.score = 0
-                self.scoreLabel.text = "Score : \(self.score)"
-                self.counter = 20
-                self.timeLabel.text = "Time : \(self.counter)"
-                
-                self.timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(ViewController.countDown), userInfo: nil, repeats: true)
-                
-                self.hideTimer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(ViewController.hideFruits), userInfo: nil, repeats: true)
-            })
-            
-            alert.addAction(okButton)
-            alert.addAction(noButton)
-            
-            self.present(alert,animated: true,completion: nil)
-        }
+
+        guard counter == 0 else { return }
+
+        stopTimers()
+        saveHighScoreIfNeeded()
+        showTimeUpAlert()
     }
-    
-    @objc func increaseScore(){
+
+    private func showTimeUpAlert() {
+        let alert = UIAlertController(title: "Time", message: "Time's Up !!!", preferredStyle: .alert)
+
+        let replayButton = UIAlertAction(title: "Yep", style: .default) { [weak self] _ in
+            self?.startGame()
+        }
+
+        let cancelButton = UIAlertAction(title: "Nope", style: .cancel)
+
+        alert.addAction(replayButton)
+        alert.addAction(cancelButton)
+
+        present(alert, animated: true)
+    }
+
+    @objc private func increaseScore() {
         score += 1
         scoreLabel.text = "Score : \(score)"
     }
-
-
 }
-
