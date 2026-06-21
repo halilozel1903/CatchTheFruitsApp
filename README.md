@@ -1,4 +1,4 @@
-# CatchTheFruitsApp
+# Catch The Fruits App
 
 CatchTheFruits, UIKit ile geliştirilmiş basit ve eğlenceli bir iOS refleks oyunudur. Ekranda rastgele beliren meyvelere dokunarak süre bitmeden en yüksek skora ulaşmanız hedeflenir.
 
