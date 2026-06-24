@@ -34,7 +34,6 @@ CatchTheFruits, UIKit ile geliştirilmiş basit ve eğlenceli bir iOS refleks oy
 4. `Run` (⌘R) ile uygulamayı başlatın.
 
 ## Yapılan Güncellemeler
-
 - Proje `SWIFT_VERSION` ayarı Swift 6 moduna (`6.0`) güncellendi.
 - Minimum iOS sürümü iOS 15.0 olarak güncellendi.
 - Oyun akışı modern Swift API'leriyle sadeleştirildi.
@@ -42,6 +41,5 @@ CatchTheFruits, UIKit ile geliştirilmiş basit ve eğlenceli bir iOS refleks oy
 - Rastgele meyve seçimi güncel yöntemle iyileştirildi.
 
 ## Swift 6.3.2 ile Kullanılan Swift Özellikleri
-
 - **`@MainActor` kullanımı:** UI güncellemeleri ana aktör üzerinde güvenli şekilde çalışacak biçimde işaretlendi.
 - **Fonksiyonel koleksiyon işlemleri (`forEach`)**: Meyve gizleme akışı daha sade hale getirildi.
